@@ -139,4 +139,60 @@ def test_sncf_response_parsing():
     assert dep3.train_number == "86045"
     assert dep3.commercial_mode == "ZOU ! Train"
 
+    # Route-wide disruption is kept
     assert "Ralentissement important sur l'axe." in status.general_disruptions
+    # Train-specific disruption is on dep1, NOT duplicated in general_disruptions
+    assert "Retard de 10 min." in dep1.disruptions
+    assert "Retard de 10 min." not in status.general_disruptions
+
+
+def test_station_ids_and_stop_date_times_precedence():
+    client = SncfClient(api_key="dummy", timezone="Europe/Paris")
+    tz = ZoneInfo("Europe/Paris")
+    query_time = datetime(2026, 9, 28, 7, 0, tzinfo=tz)
+
+    assert CommuteDirection.ANTIBES_TO_NICE.origin_id == "stop_area:OCE:SA:87757674"
+    assert CommuteDirection.ANTIBES_TO_NICE.destination_id == "stop_area:OCE:SA:87756056"
+
+    # Simulate train that originated in Cannes earlier (e.g. 06:50), but departs Antibes at 07:15
+    mock_data = {
+        "journeys": [
+            {
+                "nb_transfers": 0,
+                "sections": [
+                    {
+                        "type": "public_transport",
+                        "display_informations": {
+                            "commercial_mode": "TER",
+                            "code": "86099",
+                            "direction": "Nice-Ville",
+                        },
+                        "base_departure_date_time": "20260928T065000",  # Trip start in Cannes
+                        "departure_date_time": "20260928T065000",
+                        "stop_date_times": [
+                            {
+                                # Boarding stop call in Antibes
+                                "stop_point": {"name": "Antibes", "platform_code": "2"},
+                                "base_departure_date_time": "20260928T071500",
+                                "departure_date_time": "20260928T072000",  # 5 min delay at Antibes
+                            }
+                        ],
+                    }
+                ],
+            }
+        ]
+    }
+
+    status = client._parse_journeys_response(
+        mock_data,
+        CommuteDirection.ANTIBES_TO_NICE,
+        query_time,
+        count=4,
+    )
+    assert len(status.departures) == 1
+    dep = status.departures[0]
+    # Must use Antibes boarding time (07:15 scheduled, 07:20 realtime), NOT Cannes 06:50
+    assert dep.scheduled_departure.strftime("%H:%M") == "07:15"
+    assert dep.realtime_departure.strftime("%H:%M") == "07:20"
+    assert dep.delay_minutes == 5
+    assert dep.platform == "2"

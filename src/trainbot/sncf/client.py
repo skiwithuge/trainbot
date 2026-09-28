@@ -136,9 +136,18 @@ class SncfClient:
             train_number = disp_info.get("headsign") or disp_info.get("code") or display_mode
             destination = disp_info.get("direction", direction.destination_name)
 
-            # Scheduled vs Realtime departure times
-            sched_str = pt_section.get("base_departure_date_time") or pt_section.get("departure_date_time")
-            real_str = pt_section.get("departure_date_time") or sched_str
+            # Scheduled vs Realtime departure times (prefer boarding stop call)
+            origin_stop = None
+            stop_date_times = pt_section.get("stop_date_times", [])
+            if stop_date_times:
+                origin_stop = stop_date_times[0]
+
+            if origin_stop:
+                sched_str = origin_stop.get("base_departure_date_time") or origin_stop.get("departure_date_time")
+                real_str = origin_stop.get("departure_date_time") or sched_str
+            else:
+                sched_str = pt_section.get("base_departure_date_time") or pt_section.get("departure_date_time")
+                real_str = pt_section.get("departure_date_time") or sched_str
 
             if not sched_str:
                 continue
@@ -149,17 +158,20 @@ class SncfClient:
             delay_minutes = int((realtime_dt - scheduled_dt).total_seconds() // 60)
 
             # Extract platform if available
-            from_stop = pt_section.get("from", {}).get("stop_point", {})
-            platform = from_stop.get("platform_code")
+            platform = None
+            if origin_stop and origin_stop.get("stop_point"):
+                platform = origin_stop["stop_point"].get("platform_code")
+            if not platform:
+                from_stop = pt_section.get("from", {}).get("stop_point", {})
+                platform = from_stop.get("platform_code")
 
-            # Extract section disruptions
+            # Extract train-specific disruptions
             section_disruptions: list[str] = []
             for dis in pt_section.get("disruptions", []):
                 for msg in dis.get("messages", []):
                     msg_text = msg.get("text", "").strip()
-                    if msg_text:
+                    if msg_text and msg_text not in section_disruptions:
                         section_disruptions.append(msg_text)
-                        general_disruptions.add(msg_text)
 
             departures.append(
                 TrainDeparture(
@@ -178,11 +190,17 @@ class SncfClient:
             if len(departures) >= count:
                 break
 
+        # Only retain general disruptions that aren't already displayed on an individual train
+        all_train_disruptions = {dis for dep in departures for dis in dep.disruptions}
+        filtered_general = sorted(
+            dis for dis in general_disruptions if dis not in all_train_disruptions
+        )
+
         return CommuteStatus(
             direction=direction,
             query_time=query_time,
             departures=departures,
-            general_disruptions=sorted(general_disruptions),
+            general_disruptions=filtered_general,
         )
 
     def _generate_mock_status(
