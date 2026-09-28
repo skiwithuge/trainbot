@@ -60,7 +60,21 @@ class SncfClient:
                 response.raise_for_status()
                 data = response.json()
             except httpx.HTTPStatusError as exc:
-                logger.error("SNCF API error status %s: %s", exc.response.status_code, exc.response.text)
+                logger.error(
+                    "SNCF API HTTP error %s for URL %s: %s",
+                    exc.response.status_code,
+                    exc.request.url,
+                    exc.response.text,
+                )
+                if exc.response.status_code == 404:
+                    try:
+                        err_data = exc.response.json()
+                        err_id = err_data.get("error", {}).get("id", "")
+                        if "journey" in err_id or "solution" in err_id:
+                            logger.info("SNCF API returned no journeys for this timeframe.")
+                            return CommuteStatus(direction=direction, query_time=now, departures=[])
+                    except Exception:
+                        pass
                 raise RuntimeError(f"Erreur API SNCF ({exc.response.status_code})") from exc
             except Exception as exc:
                 logger.error("Failed to connect to SNCF API: %s", exc)

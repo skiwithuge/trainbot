@@ -20,11 +20,11 @@ class CommuteDirection(str, Enum):
 
     @property
     def origin_id(self) -> str:
-        return "stop_area:OCE:SA:87757674" if self == CommuteDirection.ANTIBES_TO_NICE else "stop_area:OCE:SA:87756056"
+        return "stop_area:SNCF:87757674" if self == CommuteDirection.ANTIBES_TO_NICE else "stop_area:SNCF:87756056"
 
     @property
     def destination_id(self) -> str:
-        return "stop_area:OCE:SA:87756056" if self == CommuteDirection.ANTIBES_TO_NICE else "stop_area:OCE:SA:87757674"
+        return "stop_area:SNCF:87756056" if self == CommuteDirection.ANTIBES_TO_NICE else "stop_area:SNCF:87757674"
 
     @property
     def reverse(self) -> CommuteDirection:

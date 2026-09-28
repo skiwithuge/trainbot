@@ -151,8 +151,8 @@ def test_station_ids_and_stop_date_times_precedence():
     tz = ZoneInfo("Europe/Paris")
     query_time = datetime(2026, 9, 28, 7, 0, tzinfo=tz)
 
-    assert CommuteDirection.ANTIBES_TO_NICE.origin_id == "stop_area:OCE:SA:87757674"
-    assert CommuteDirection.ANTIBES_TO_NICE.destination_id == "stop_area:OCE:SA:87756056"
+    assert CommuteDirection.ANTIBES_TO_NICE.origin_id == "stop_area:SNCF:87757674"
+    assert CommuteDirection.ANTIBES_TO_NICE.destination_id == "stop_area:SNCF:87756056"
 
     # Simulate train that originated in Cannes earlier (e.g. 06:50), but departs Antibes at 07:15
     mock_data = {
