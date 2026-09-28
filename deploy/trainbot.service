@@ -1,0 +1,21 @@
+[Unit]
+Description=SNCF Train Telegram Bot (Antibes <-> Nice-Ville)
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/trainbot
+EnvironmentFile=/opt/trainbot/.env
+ExecStart=/opt/trainbot/.venv/bin/python -m trainbot.main
+Restart=always
+RestartSec=5s
+
+# Logging configuration
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=trainbot
+
+[Install]
+WantedBy=multi-user.target
