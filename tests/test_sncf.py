@@ -77,6 +77,42 @@ def test_sncf_response_parsing():
                     }
                 ],
             },
+            {
+                # ZOU ! Train - should be included
+                "nb_transfers": 0,
+                "sections": [
+                    {
+                        "type": "public_transport",
+                        "display_informations": {
+                            "commercial_mode": "ZOU ! Train",
+                            "network": "ZOU !",
+                            "physical_mode": "Train",
+                            "code": "86045",
+                            "direction": "Nice-Ville",
+                        },
+                        "base_departure_date_time": "20260928T075000",
+                        "departure_date_time": "20260928T075000",
+                    }
+                ],
+            },
+            {
+                # Replacement Car ZOU! - should be excluded
+                "nb_transfers": 0,
+                "sections": [
+                    {
+                        "type": "public_transport",
+                        "display_informations": {
+                            "commercial_mode": "Car ZOU !",
+                            "network": "ZOU !",
+                            "physical_mode": "Bus",
+                            "code": "BUS86047",
+                            "direction": "Nice-Ville",
+                        },
+                        "base_departure_date_time": "20260928T080000",
+                        "departure_date_time": "20260928T080000",
+                    }
+                ],
+            },
         ],
     }
 
@@ -87,9 +123,10 @@ def test_sncf_response_parsing():
         count=4,
     )
 
-    assert len(status.departures) == 2  # Only 2 TER trains, TGV was ignored
+    assert len(status.departures) == 3  # TER + TER cancelled + ZOU! Train (TGV and Bus ignored)
     dep1 = status.departures[0]
     assert dep1.train_number == "86041"
+    assert dep1.commercial_mode == "TER"
     assert dep1.delay_minutes == 10
     assert dep1.platform == "1"
     assert not dep1.is_cancelled
@@ -97,5 +134,9 @@ def test_sncf_response_parsing():
     dep2 = status.departures[1]
     assert dep2.train_number == "86043"
     assert dep2.is_cancelled is True
+
+    dep3 = status.departures[2]
+    assert dep3.train_number == "86045"
+    assert dep3.commercial_mode == "ZOU ! Train"
 
     assert "Ralentissement important sur l'axe." in status.general_disruptions

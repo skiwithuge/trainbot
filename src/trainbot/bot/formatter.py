@@ -22,7 +22,8 @@ def format_departure_card(dep: TrainDeparture) -> str:
 
     # Train details
     platform_info = f" • Voie <b>{html.escape(dep.platform)}</b>" if dep.platform else ""
-    details_line = f"🚆 TER {html.escape(dep.train_number)} ➔ {html.escape(dep.destination)}{platform_info}"
+    mode_label = html.escape(dep.commercial_mode) if dep.commercial_mode else "TER"
+    details_line = f"🚆 {mode_label} {html.escape(dep.train_number)} ➔ {html.escape(dep.destination)}{platform_info}"
 
     lines = [time_line, details_line]
 
@@ -39,10 +40,10 @@ def format_commute_message(status: CommuteStatus) -> str:
     dest = status.direction.destination_name
     q_time = status.query_time.strftime("%H:%M")
 
-    header = f"🚄 <b>TER : {orig} ➔ {dest}</b>\n<i>Mis à jour à {q_time}</i>\n"
+    header = f"🚄 <b>{orig} ➔ {dest}</b>\n<i>Mis à jour à {q_time}</i>\n"
 
     if not status.departures:
-        body = "\n<i>Aucun train TER prévu dans les prochaines heures.</i>\n"
+        body = "\n<i>Aucun train régional prévu dans les prochaines heures.</i>\n"
     else:
         cards = [format_departure_card(dep) for dep in status.departures]
         body = "\n\n".join(cards)

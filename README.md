@@ -1,12 +1,12 @@
 # SNCF Train Bot (Antibes ⟷ Nice-Ville)
 
-Bot Telegram personnel fournissant en temps réel les horaires de TER, retards et alertes de trafic entre **Antibes** et **Nice-Ville**, avec diffusions programmées et requêtes à la demande pour utilisateurs autorisés.
+Bot Telegram personnel fournissant en temps réel les horaires de trains régionaux (TER & ZOU!), retards et alertes de trafic entre **Antibes** et **Nice-Ville**, avec diffusions programmées et requêtes à la demande pour utilisateurs autorisés.
 
 ---
 
 ## 🌟 Fonctionnalités
 
-- 🚆 **TER uniquement** : Filtrage strict pour exclure les TGV / OUIGO et ne retenir que les trains régionaux de la ligne côtière.
+- 🚆 **TER & ZOU! uniquement** : Filtrage strict pour exclure les TGV / OUIGO et ne retenir que les trains régionaux de la ligne côtière (excluant également les autocars de substitution).
 - ⏱️ **Temps réel et retards** : Détection des retards calculés à la minute près (`+X min`) et des trains supprimés (`🔴 Supprimé`).
 - 📢 **Infos trafic & perturbations** : Synthèse des messages opérationnels et incidents de circulation SNCF.
 - ⏰ **Alertes automatiques** :

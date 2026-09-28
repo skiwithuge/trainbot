@@ -12,6 +12,10 @@ _Avoid_: Trip, Journey, Route
 A scheduled passenger train service departing from the origin station towards the destination station.
 _Avoid_: Train instance, Leg, Booking
 
+**Regional Train**:
+A rail-bound passenger service operating under regional transport governance (TER, ZOU!, or Région Sud regional rail services).
+_Avoid_: Express, Long-distance train, Coach, Bus
+
 **Disruption**:
 An operational incident, schedule change, delay, cancellation, or notice affecting train circulation.
 _Avoid_: Incident, Bug, Problem

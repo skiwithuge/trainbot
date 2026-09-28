@@ -35,7 +35,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     welcome_text = (
         "👋 <b>Bonjour !</b>\n\n"
-        "Je suis votre assistant TER direct <b>Antibes ⟷ Nice-Ville</b>.\n"
+        "Je suis votre assistant direct <b>Antibes ⟷ Nice-Ville</b> (TER & ZOU!).\n"
         "Je vous préviens des prochains départs, retards et perturbations.\n\n"
         "📅 <b>Alertes automatiques :</b>\n"
         "• 07:00 (Semaine) : Antibes ➔ Nice-Ville\n"
@@ -111,7 +111,7 @@ async def _send_departures(
     client: SncfClient = context.bot_data["sncf_client"]
 
     waiting_msg = await update.effective_message.reply_text(
-        f"🔍 Recherche des prochains TER <b>{direction.origin_name} ➔ {direction.destination_name}</b>...",
+        f"🔍 Recherche des prochains trains <b>{direction.origin_name} ➔ {direction.destination_name}</b>...",
         parse_mode=ParseMode.HTML,
     )
 

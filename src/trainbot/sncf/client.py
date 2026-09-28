@@ -106,14 +106,34 @@ class SncfClient:
                 continue
 
             disp_info = pt_section.get("display_informations", {})
-            commercial_mode = disp_info.get("commercial_mode", "")
-            network = disp_info.get("network", "")
+            commercial_mode = disp_info.get("commercial_mode", "").strip()
+            network = disp_info.get("network", "").strip()
+            physical_mode = disp_info.get("physical_mode", "").lower()
 
-            # Filter strictly for TER trains
-            if commercial_mode != "TER" and network != "TER":
+            # Exclude replacement buses and coaches (rail trains only)
+            if any(road_mode in physical_mode for road_mode in ("bus", "coach", "car", "autocar")):
                 continue
 
-            train_number = disp_info.get("headsign") or disp_info.get("code") or "TER"
+            # Exclude long-distance services
+            comm_upper = commercial_mode.upper()
+            excluded_modes = ("TGV", "OUIGO", "INTERCIT", "EUROSTAR", "FRECCIAROSSA")
+            if any(excl in comm_upper for excl in excluded_modes):
+                continue
+
+            # Match regional services: TER, ZOU!, or Région Sud
+            net_upper = network.upper()
+            is_regional = (
+                "TER" in comm_upper
+                or "ZOU" in comm_upper
+                or "TER" in net_upper
+                or "ZOU" in net_upper
+                or "REGION" in net_upper
+            )
+            if not is_regional:
+                continue
+
+            display_mode = commercial_mode if commercial_mode else "TER"
+            train_number = disp_info.get("headsign") or disp_info.get("code") or display_mode
             destination = disp_info.get("direction", direction.destination_name)
 
             # Scheduled vs Realtime departure times
@@ -144,7 +164,7 @@ class SncfClient:
             departures.append(
                 TrainDeparture(
                     train_number=train_number,
-                    commercial_mode="TER",
+                    commercial_mode=display_mode,
                     destination=destination,
                     scheduled_departure=scheduled_dt,
                     realtime_departure=realtime_dt,

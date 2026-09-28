@@ -34,6 +34,24 @@ def test_format_commute_message_on_time():
     assert "TER 86010" in msg
     assert "Voie <b>A</b>" in msg
 
+    # Test ZOU! badge
+    dep_zou = TrainDeparture(
+        train_number="86012",
+        commercial_mode="ZOU !",
+        destination="Nice-Ville",
+        scheduled_departure=dep_time,
+        realtime_departure=dep_time,
+        delay_minutes=0,
+        is_cancelled=False,
+    )
+    status_zou = CommuteStatus(
+        direction=CommuteDirection.ANTIBES_TO_NICE,
+        query_time=q_time,
+        departures=[dep_zou],
+    )
+    msg_zou = format_commute_message(status_zou)
+    assert "ZOU ! 86012" in msg_zou
+
 
 def test_format_commute_message_delayed_and_cancelled():
     tz = ZoneInfo("Europe/Paris")
