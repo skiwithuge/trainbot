@@ -17,6 +17,8 @@ A fully functional, tested, and containerized Python Telegram bot service deploy
 
 <!-- the index: one line per closed ticket, enough to judge relevance, then zoom the link for the detail the ticket holds -->
 
+- [SNCF API Research: Departures, Delays, and Disruptions for Antibes ⟷ Nice Ville](file:///home/skiwithuge/workspace/antigravity/trainbot/.scratch/trainbot/issues/01-sncf-api-research.md): Use Navitia `/journeys` with stop areas `87757674` (Antibes) and `87756056` (Nice-Ville) with Basic Auth; filter `commercial_mode == 'TER'` and extract live delay deltas and disruption advisories.
+
 ## Not yet specified
 
 - **API Resiliency & Caching**: How to handle temporary SNCF API outages, network retries, or rate limit throttling gracefully during scheduled broadcast hours.
