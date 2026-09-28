@@ -140,10 +140,10 @@ def test_sncf_response_parsing():
     assert dep3.commercial_mode == "ZOU ! Train"
 
     # Route-wide disruption is kept
-    assert "Ralentissement important sur l'axe." in status.general_disruptions
+    assert any("Ralentissement important sur l" in d for d in status.general_disruptions)
     # Train-specific disruption is on dep1, NOT duplicated in general_disruptions
-    assert "Retard de 10 min." in dep1.disruptions
-    assert "Retard de 10 min." not in status.general_disruptions
+    assert any("Retard de 10 min." in d for d in dep1.disruptions)
+    assert not any("Retard de 10 min." in d for d in status.general_disruptions)
 
 
 def test_station_ids_and_stop_date_times_precedence():

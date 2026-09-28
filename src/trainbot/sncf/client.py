@@ -82,6 +82,59 @@ class SncfClient:
 
         return self._parse_journeys_response(data, direction, now, count)
 
+    @staticmethod
+    def _format_disruption_text(dis: dict[str, Any]) -> str:
+        """Format disruption title and message into clear HTML text."""
+        import html
+        title = dis.get("title", "").strip()
+        msg_texts = [
+            m.get("text", "").strip()
+            for m in dis.get("messages", [])
+            if m.get("text", "").strip()
+        ]
+        full_msg = " ".join(msg_texts)
+
+        safe_title = html.escape(title)
+        safe_msg = html.escape(full_msg)
+
+        if safe_title and safe_msg and title.lower() not in full_msg.lower():
+            return f"<b>{safe_title}</b> : <i>{safe_msg}</i>"
+        if safe_title and not safe_msg:
+            return f"<b>{safe_title}</b>"
+        return f"<i>{safe_msg}</i>" if safe_msg else safe_title
+
+    def _matches_train(
+        self,
+        dis: dict[str, Any],
+        train_number: str,
+        vj_id: str | None,
+        section_disruption_ids: set[str],
+    ) -> bool:
+        """Check if a disruption belongs to this specific train."""
+        # 1. Match direct disruption ID
+        dis_id = dis.get("id")
+        if dis_id and dis_id in section_disruption_ids:
+            return True
+
+        # 2. Match impacted objects (vehicle journey or train code)
+        for imp in dis.get("impacted_objects", []):
+            pt_obj = imp.get("pt_object", {})
+            pt_id = pt_obj.get("id", "")
+            pt_name = pt_obj.get("name", "")
+
+            # Match vehicle journey ID
+            if vj_id:
+                clean_vj = vj_id.replace("vehicle_journey:", "")
+                if clean_vj and clean_vj in pt_id:
+                    return True
+
+            # Match train number (e.g. 86087 in 'SNCF:2026-09-28:86087:...' or 'ZOU ! N°86087')
+            if train_number:
+                if f":{train_number}:" in pt_id or train_number in pt_name:
+                    return True
+
+        return False
+
     def _parse_journeys_response(
         self,
         data: dict[str, Any],
@@ -91,14 +144,8 @@ class SncfClient:
     ) -> CommuteStatus:
         """Parse raw Navitia journeys response into typed CommuteStatus."""
         departures: list[TrainDeparture] = []
-        general_disruptions: set[str] = set()
-
-        # Parse global disruptions if present
-        for dis in data.get("disruptions", []):
-            for msg in dis.get("messages", []):
-                text = msg.get("text", "").strip()
-                if text:
-                    general_disruptions.add(text)
+        all_disruptions = data.get("disruptions", [])
+        matched_disruption_ids: set[str] = set()
 
         journeys = data.get("journeys", [])
         for journey in journeys:
@@ -179,13 +226,36 @@ class SncfClient:
                 from_stop = pt_section.get("from", {}).get("stop_point", {})
                 platform = from_stop.get("platform_code")
 
-            # Extract train-specific disruptions
+            # Extract vehicle journey ID and direct disruption IDs
+            vj_id = None
+            for link in pt_section.get("links", []):
+                if link.get("type") == "vehicle_journey":
+                    vj_id = link.get("id")
+
+            section_disruption_ids: set[str] = set()
+            for link in disp_info.get("links", []):
+                if link.get("type") == "disruption":
+                    section_disruption_ids.add(link.get("id", ""))
+
+            # Extract train-specific disruptions and operational notices (e.g. Toilettes hors service)
             section_disruptions: list[str] = []
+
+            # 1. Match from root disruptions via vehicle journey / train number / ID
+            for dis in all_disruptions:
+                if self._matches_train(dis, train_number, vj_id, section_disruption_ids):
+                    text = self._format_disruption_text(dis)
+                    if text and text not in section_disruptions:
+                        section_disruptions.append(text)
+                    if dis.get("id"):
+                        matched_disruption_ids.add(dis["id"])
+
+            # 2. Check inline section disruptions
             for dis in pt_section.get("disruptions", []):
-                for msg in dis.get("messages", []):
-                    msg_text = msg.get("text", "").strip()
-                    if msg_text and msg_text not in section_disruptions:
-                        section_disruptions.append(msg_text)
+                text = self._format_disruption_text(dis)
+                if text and text not in section_disruptions:
+                    section_disruptions.append(text)
+                if dis.get("id"):
+                    matched_disruption_ids.add(dis["id"])
 
             departures.append(
                 TrainDeparture(
@@ -204,17 +274,20 @@ class SncfClient:
             if len(departures) >= count:
                 break
 
-        # Only retain general disruptions that aren't already displayed on an individual train
-        all_train_disruptions = {dis for dep in departures for dis in dep.disruptions}
-        filtered_general = sorted(
-            dis for dis in general_disruptions if dis not in all_train_disruptions
-        )
+        # Only retain general disruptions that aren't tied to an individual train
+        general_disruptions: list[str] = []
+        for dis in all_disruptions:
+            if dis.get("id") and dis["id"] in matched_disruption_ids:
+                continue
+            text = self._format_disruption_text(dis)
+            if text and text not in general_disruptions:
+                general_disruptions.append(text)
 
         return CommuteStatus(
             direction=direction,
             query_time=query_time,
             departures=departures,
-            general_disruptions=filtered_general,
+            general_disruptions=sorted(general_disruptions),
         )
 
     def _generate_mock_status(

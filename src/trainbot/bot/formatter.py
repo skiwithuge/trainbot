@@ -29,7 +29,7 @@ def format_departure_card(dep: TrainDeparture) -> str:
 
     if dep.disruptions:
         for dis in dep.disruptions:
-            lines.append(f"⚠️ <i>{html.escape(dis)}</i>")
+            lines.append(f"⚠️ {dis}")
 
     return "\n".join(lines)
 
@@ -50,7 +50,7 @@ def format_commute_message(status: CommuteStatus) -> str:
 
     disruption_section = ""
     if status.general_disruptions:
-        dis_items = "\n".join(f"• <i>{html.escape(d)}</i>" for d in status.general_disruptions[:3])
+        dis_items = "\n".join(f"• {d}" for d in status.general_disruptions[:3])
         disruption_section = f"\n\n📢 <b>Infos Trafic :</b>\n{dis_items}"
 
     return f"{header}\n{body}{disruption_section}"
