@@ -30,7 +30,7 @@ Bot Telegram personnel fournissant en temps réel les horaires de TER, retards e
 
 Dans la console de votre conteneur LXC :
 ```bash
-git clone <url-du-depot> /opt/trainbot
+git clone https://github.com/skiwithuge/trainbot.git /opt/trainbot
 cd /opt/trainbot
 ```
 
