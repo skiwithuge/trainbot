@@ -46,5 +46,9 @@ def build_application(config: Config) -> Application:
     # Register callback query handler for inline buttons
     app.add_handler(CallbackQueryHandler(callback_handler))
 
+    # Setup automated scheduled broadcasts
+    from trainbot.scheduler import setup_scheduler
+    setup_scheduler(app, config)
+
     logger.info("Application initialized with %d allowed users.", len(config.allowed_user_ids))
     return app

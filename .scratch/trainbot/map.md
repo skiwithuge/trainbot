@@ -20,6 +20,7 @@ A fully functional, tested, and containerized Python Telegram bot service deploy
 - [SNCF API Research: Departures, Delays, and Disruptions for Antibes ⟷ Nice Ville](file:///home/skiwithuge/workspace/antigravity/trainbot/.scratch/trainbot/issues/01-sncf-api-research.md): Use Navitia `/journeys` with stop areas `87757674` (Antibes) and `87756056` (Nice-Ville) with Basic Auth; filter `commercial_mode == 'TER'` and extract live delay deltas and disruption advisories.
 - [Telegram Message Formatting & Interactive UX Prototype](file:///home/skiwithuge/workspace/antigravity/trainbot/.scratch/trainbot/issues/02-telegram-message-formatting.md): Use Telegram HTML mode for robust rendering with strikethrough for delays/cancellations, color emoji badges, and inline refresh/direction-switch buttons.
 - [Core Bot Architecture & User ID Whitelisting](file:///home/skiwithuge/workspace/antigravity/trainbot/.scratch/trainbot/issues/03-core-bot-and-auth.md): Built `Config`, `@restricted` decorator rejecting unauthorized IDs with user ID readout, and `/start`, `/help`, `/trains`, `/antibes`, `/nice` handlers.
+- [Scheduler & Automated Commute Broadcasts](file:///home/skiwithuge/workspace/antigravity/trainbot/.scratch/trainbot/issues/04-scheduler-and-broadcast.md): Built `JobQueue` daily triggers configured for `Europe/Paris` weekdays at 07:00 and 16:00, broadcasting to all whitelisted users.
 
 ## Not yet specified
 
