@@ -90,3 +90,12 @@ Within the journey JSON, inspect `sections` where `type == "public_transport"`:
 
 ## 5. Fallback & Mock Fixture Design
 For unit tests, dry-runs, and offline CI without an active network connection, a mock JSON fixture simulating normal, delayed, and cancelled TER trains between Antibes and Nice Ville will be provided.
+
+## 6. Public Open Data API vs SNCF Voyageurs Commercial Website
+
+- **Operational Circulation vs Comfort Notes**:
+  - The public API (`api.sncf.com/v1/coverage/sncf`) publishes operational circulation data: scheduled and estimated departures, track/platform numbers, delay calculations, train cancellations, and network traffic alerts (e.g. signaling failure, track obstruction, material breakdown).
+  - Onboard rolling stock comfort notes (e.g. out-of-order toilets, specific car catering status) originate in SNCF Voyageurs' internal commercial CMS and are not syndicated into the public Open Data feed.
+- **Decision Record**:
+  - Documented in [docs/adr/0001-sncf-open-data-vs-voyageurs-cms.md](file:///home/skiwithuge/workspace/antigravity/trainbot/docs/adr/0001-sncf-open-data-vs-voyageurs-cms.md). The bot relies strictly on the official Open Data API to avoid the fragility and bot-blocking issues of web scraping.
+

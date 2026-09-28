@@ -97,3 +97,11 @@ export ALLOWED_USER_IDS="votre_id"
 
 python -m trainbot.main
 ```
+
+---
+
+## ℹ️ Périmètre des données SNCF
+
+- **Données opérationnelles en direct (incluses)** : Horaires théoriques et temps réel, retards à la minute, voies/quais, suppressions de trains et perturbations de circulation (pannes, obstacles, incidents de voie).
+- **Avis de confort à bord (exclus)** : Les avis mineurs de confort matériel (ex. toilettes hors service sur une rame) sont gérés sur le CMS commercial interne de SNCF Voyageurs et ne sont pas diffusés dans le flux Open Data officiel de circulation (voir [ADR 0001](file:///home/skiwithuge/workspace/antigravity/trainbot/docs/adr/0001-sncf-open-data-vs-voyageurs-cms.md)).
+
