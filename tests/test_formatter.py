@@ -108,7 +108,8 @@ def test_make_commute_keyboard():
 
     row1 = kb.inline_keyboard[1]
     assert len(row1) == 1
-    assert row1[0].text == "🎫 SNCF Connect"
+    assert row1[0].text == "🎫 SNCF Voyageurs"
+    assert "ter.sncf.com" in row1[0].url
     assert "origin=Antibes" in row1[0].url
     assert "destination=Nice-Ville" in row1[0].url
 
@@ -116,4 +117,5 @@ def test_make_commute_keyboard():
     row1_rev = kb_reverse.inline_keyboard[1]
     assert "origin=Nice-Ville" in row1_rev[0].url
     assert "destination=Antibes" in row1_rev[0].url
+
 

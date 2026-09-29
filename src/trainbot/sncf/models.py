@@ -35,9 +35,10 @@ class CommuteDirection(str, Enum):
         )
 
     @property
-    def sncf_connect_url(self) -> str:
+    def sncf_voyageurs_url(self) -> str:
         from urllib.parse import quote
-        return f"https://www.sncf-connect.com/app/home/search?origin={quote(self.origin_name)}&destination={quote(self.destination_name)}"
+        return f"https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/rechercher-un-horaire?origin={quote(self.origin_name)}&destination={quote(self.destination_name)}"
+
 
 
 
