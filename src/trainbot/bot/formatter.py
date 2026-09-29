@@ -67,7 +67,7 @@ def make_commute_keyboard(direction: CommuteDirection) -> InlineKeyboardMarkup:
             InlineKeyboardButton(reverse_label, callback_data=f"switch:{reverse_dir.value}"),
         ],
         [
-            InlineKeyboardButton("🎫 Trainline", url=direction.trainline_url),
+            InlineKeyboardButton("🎫 TER Sud", url=direction.ter_url),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)

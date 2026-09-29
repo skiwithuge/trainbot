@@ -35,18 +35,9 @@ class CommuteDirection(str, Enum):
         )
 
     @property
-    def trainline_url(self) -> str:
-        if self == CommuteDirection.ANTIBES_TO_NICE:
-            return "https://www.thetrainline.com/en/train-times/antibes-to-nice-ville"
-        return "https://www.thetrainline.com/en/train-times/nice-ville-to-antibes"
-
-    @property
-    def booking_url(self) -> str:
-        return self.trainline_url
-
-    @property
-    def sncf_voyageurs_url(self) -> str:
-        return self.trainline_url
+    def ter_url(self) -> str:
+        station_slug = "antibes" if self == CommuteDirection.ANTIBES_TO_NICE else "nice-ville"
+        return f"https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/gares/{station_slug}"
 
 
 
