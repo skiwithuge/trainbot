@@ -34,10 +34,53 @@ class CommuteDirection(str, Enum):
             else CommuteDirection.ANTIBES_TO_NICE
         )
 
+    def build_sncf_voyageurs_url(self, at_time: datetime | None = None) -> str:
+        from datetime import datetime, timezone
+        from urllib.parse import urlencode
+
+        antibes = {
+            "Label": "Antibes",
+            "Type": "ZONE_ARRET",
+            "Code": "OCE87757674",
+            "Lng": "7.1199131",
+            "Lat": "43.58597093",
+        }
+        nice = {
+            "Label": "Nice",
+            "Type": "ZONE_ARRET",
+            "Code": "OCE87756056",
+            "Lng": "7.261904",
+            "Lat": "43.704556",
+        }
+
+        if self == CommuteDirection.ANTIBES_TO_NICE:
+            dep, arr = antibes, nice
+        else:
+            dep, arr = nice, antibes
+
+        dt = at_time or datetime.now(timezone.utc)
+        date_str = dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+
+        params = {
+            "departureLabel": dep["Label"],
+            "departureType": dep["Type"],
+            "departureCode": dep["Code"],
+            "departureLng": dep["Lng"],
+            "departureLat": dep["Lat"],
+            "arrivalLabel": arr["Label"],
+            "arrivalType": arr["Type"],
+            "arrivalCode": arr["Code"],
+            "arrivalLng": arr["Lng"],
+            "arrivalLat": arr["Lat"],
+            "date": date_str,
+            "sens": "PARTIR_APRES",
+        }
+        return f"https://www.sncf-voyageurs.com/en/travel-with-us/timetables-and-itineraries/itineraries/itineraries-details/?{urlencode(params)}"
+
     @property
     def sncf_voyageurs_url(self) -> str:
-        from urllib.parse import quote
-        return f"https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/rechercher-un-horaire?origin={quote(self.origin_name)}&destination={quote(self.destination_name)}"
+        return self.build_sncf_voyageurs_url()
+
 
 
 
