@@ -109,13 +109,13 @@ def test_make_commute_keyboard():
     row1 = kb.inline_keyboard[1]
     assert len(row1) == 1
     assert row1[0].text == "🎫 TER Sud"
-    assert row1[0].url == "https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/gares/antibes"
+    assert row1[0].url == "https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/se-deplacer/prochains-departs/antibes-87757674"
 
     kb_rev = make_commute_keyboard(CommuteDirection.NICE_TO_ANTIBES)
     row1_rev = kb_rev.inline_keyboard[1]
     assert len(row1_rev) == 1
     assert row1_rev[0].text == "🎫 TER Sud"
-    assert row1_rev[0].url == "https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/gares/nice-ville"
+    assert row1_rev[0].url == "https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/se-deplacer/prochains-departs/nice-ville-87756056"
 
 
 

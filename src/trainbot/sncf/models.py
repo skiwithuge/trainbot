@@ -36,8 +36,12 @@ class CommuteDirection(str, Enum):
 
     @property
     def ter_url(self) -> str:
-        station_slug = "antibes" if self == CommuteDirection.ANTIBES_TO_NICE else "nice-ville"
-        return f"https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/gares/{station_slug}"
+        station_slug = (
+            "antibes-87757674"
+            if self == CommuteDirection.ANTIBES_TO_NICE
+            else "nice-ville-87756056"
+        )
+        return f"https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/se-deplacer/prochains-departs/{station_slug}"
 
 
 
