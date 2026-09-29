@@ -34,6 +34,12 @@ class CommuteDirection(str, Enum):
             else CommuteDirection.ANTIBES_TO_NICE
         )
 
+    @property
+    def sncf_connect_url(self) -> str:
+        from urllib.parse import quote
+        return f"https://www.sncf-connect.com/app/home/search?origin={quote(self.origin_name)}&destination={quote(self.destination_name)}"
+
+
 
 @dataclass(frozen=True)
 class TrainDeparture:

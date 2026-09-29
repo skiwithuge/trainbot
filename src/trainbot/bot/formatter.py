@@ -57,7 +57,7 @@ def format_commute_message(status: CommuteStatus) -> str:
 
 
 def make_commute_keyboard(direction: CommuteDirection) -> InlineKeyboardMarkup:
-    """Generate refresh and direction-switch buttons."""
+    """Generate refresh, direction-switch, and SNCF Connect buttons."""
     reverse_dir = direction.reverse
     reverse_label = f"↔️ Vers {reverse_dir.destination_name}"
 
@@ -65,6 +65,10 @@ def make_commute_keyboard(direction: CommuteDirection) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton("🔄 Actualiser", callback_data=f"refresh:{direction.value}"),
             InlineKeyboardButton(reverse_label, callback_data=f"switch:{reverse_dir.value}"),
-        ]
+        ],
+        [
+            InlineKeyboardButton("🎫 SNCF Connect", url=direction.sncf_connect_url),
+        ],
     ]
     return InlineKeyboardMarkup(keyboard)
+

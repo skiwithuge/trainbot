@@ -97,9 +97,23 @@ def test_format_commute_message_delayed_and_cancelled():
 
 def test_make_commute_keyboard():
     kb = make_commute_keyboard(CommuteDirection.ANTIBES_TO_NICE)
-    buttons = kb.inline_keyboard[0]
-    assert len(buttons) == 2
-    assert buttons[0].text == "🔄 Actualiser"
-    assert buttons[0].callback_data == "refresh:antibes_to_nice"
-    assert "Vers Antibes" in buttons[1].text
-    assert buttons[1].callback_data == "switch:nice_to_antibes"
+    assert len(kb.inline_keyboard) == 2
+    
+    row0 = kb.inline_keyboard[0]
+    assert len(row0) == 2
+    assert row0[0].text == "🔄 Actualiser"
+    assert row0[0].callback_data == "refresh:antibes_to_nice"
+    assert "Vers Antibes" in row0[1].text
+    assert row0[1].callback_data == "switch:nice_to_antibes"
+
+    row1 = kb.inline_keyboard[1]
+    assert len(row1) == 1
+    assert row1[0].text == "🎫 SNCF Connect"
+    assert "origin=Antibes" in row1[0].url
+    assert "destination=Nice-Ville" in row1[0].url
+
+    kb_reverse = make_commute_keyboard(CommuteDirection.NICE_TO_ANTIBES)
+    row1_rev = kb_reverse.inline_keyboard[1]
+    assert "origin=Nice-Ville" in row1_rev[0].url
+    assert "destination=Antibes" in row1_rev[0].url
+
