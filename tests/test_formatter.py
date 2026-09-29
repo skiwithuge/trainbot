@@ -109,14 +109,8 @@ def test_make_commute_keyboard():
     row1 = kb.inline_keyboard[1]
     assert len(row1) == 1
     assert row1[0].text == "🎫 SNCF Voyageurs"
-    assert "sncf-voyageurs.com" in row1[0].url
-    assert "departureCode=OCE87757674" in row1[0].url
-    assert "arrivalCode=OCE87756056" in row1[0].url
+    assert row1[0].url == "https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur"
 
-    kb_reverse = make_commute_keyboard(CommuteDirection.NICE_TO_ANTIBES)
-    row1_rev = kb_reverse.inline_keyboard[1]
-    assert "departureCode=OCE87756056" in row1_rev[0].url
-    assert "arrivalCode=OCE87757674" in row1_rev[0].url
 
 
 
