@@ -1,6 +1,13 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from trainbot.bot.formatter import format_commute_message, make_commute_keyboard
+from trainbot.bot.formatter import (
+    format_bus_message,
+    format_bus_section,
+    format_commute_message,
+    make_bus_keyboard,
+    make_commute_keyboard,
+)
+from trainbot.envibus.models import BusCommuteStatus, BusDeparture
 from trainbot.sncf.models import CommuteDirection, CommuteStatus, TrainDeparture
 
 
@@ -95,10 +102,76 @@ def test_format_commute_message_delayed_and_cancelled():
     assert "Grève locale interprofessionnelle." in msg
 
 
+def test_format_commute_message_with_bus_section():
+    tz = ZoneInfo("Europe/Paris")
+    q_time = datetime(2026, 9, 28, 7, 0, tzinfo=tz)
+
+    train_status = CommuteStatus(
+        direction=CommuteDirection.ANTIBES_TO_NICE,
+        query_time=q_time,
+        departures=[],
+    )
+
+    bus_dep = BusDeparture(
+        minutes_away=8,
+        estimated_time=datetime(2026, 9, 28, 7, 8, tzinfo=tz),
+        destination="Antibes les Pins",
+        is_realtime=True,
+    )
+    bus_status = BusCommuteStatus(
+        line_name="Ligne A",
+        stop_name="Collège Bertone",
+        direction_name="Pôle d'Échanges d'Antibes",
+        departures=[bus_dep],
+        query_time=q_time,
+    )
+
+    msg = format_commute_message(train_status, bus_status)
+    assert "Envibus Ligne A (Collège Bertone ➔ Pôle d'Échanges d'Antibes)" in msg
+    assert "Dans 8 min" in msg
+    assert "07:08" in msg
+
+
+def test_format_bus_message_standalone():
+    tz = ZoneInfo("Europe/Paris")
+    q_time = datetime(2026, 9, 28, 16, 0, tzinfo=tz)
+
+    bus_dep = BusDeparture(
+        minutes_away=5,
+        estimated_time=datetime(2026, 9, 28, 16, 5, tzinfo=tz),
+        destination="G.R. Valbonne",
+        is_realtime=True,
+    )
+    bus_status = BusCommuteStatus(
+        line_name="Ligne A",
+        stop_name="Pôle d'Échanges d'Antibes",
+        direction_name="Collège Bertone",
+        departures=[bus_dep],
+        query_time=q_time,
+    )
+
+    msg = format_bus_message(bus_status)
+    assert "Pôle d'Échanges d'Antibes ➔ Collège Bertone" in msg
+    assert "Dans 5 min" in msg
+    assert "16:05" in msg
+    assert "G.R. Valbonne" in msg
+
+    # Empty status
+    empty_status = BusCommuteStatus(
+        line_name="Ligne A",
+        stop_name="Collège Bertone",
+        direction_name="Pôle d'Échanges d'Antibes",
+        departures=[],
+        query_time=q_time,
+    )
+    empty_msg = format_bus_message(empty_status)
+    assert "Aucun bus en circulation en temps réel actuellement." in empty_msg
+
+
 def test_make_commute_keyboard():
     kb = make_commute_keyboard(CommuteDirection.ANTIBES_TO_NICE)
     assert len(kb.inline_keyboard) == 2
-    
+
     row0 = kb.inline_keyboard[0]
     assert len(row0) == 2
     assert row0[0].text == "🔄 Actualiser"
@@ -107,16 +180,25 @@ def test_make_commute_keyboard():
     assert row0[1].callback_data == "switch:nice_to_antibes"
 
     row1 = kb.inline_keyboard[1]
-    assert len(row1) == 1
+    assert len(row1) == 2
     assert row1[0].text == "🎫 TER Sud"
     assert row1[0].url == "https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/se-deplacer/prochains-departs/antibes-87757674"
-
-    kb_rev = make_commute_keyboard(CommuteDirection.NICE_TO_ANTIBES)
-    row1_rev = kb_rev.inline_keyboard[1]
-    assert len(row1_rev) == 1
-    assert row1_rev[0].text == "🎫 TER Sud"
-    assert row1_rev[0].url == "https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/se-deplacer/prochains-departs/nice-ville-87756056"
+    assert row1[1].text == "🚌 Envibus Ligne A"
+    assert row1[1].url == "https://www.envibus.fr"
 
 
+def test_make_bus_keyboard():
+    kb = make_bus_keyboard(CommuteDirection.ANTIBES_TO_NICE)
+    assert len(kb.inline_keyboard) == 2
 
+    row0 = kb.inline_keyboard[0]
+    assert len(row0) == 2
+    assert row0[0].text == "🔄 Actualiser"
+    assert row0[0].callback_data == "bus_refresh:antibes_to_nice"
+    assert "Sens inverse" in row0[1].text
+    assert row0[1].callback_data == "bus_switch:nice_to_antibes"
 
+    row1 = kb.inline_keyboard[1]
+    assert len(row1) == 1
+    assert row1[0].text == "🚌 Fiche Horaires Ligne A"
+    assert row1[0].url == "https://www.envibus.fr"

@@ -14,10 +14,11 @@ Bot Telegram personnel fournissant en temps réel les horaires de trains région
   - **16:00** (du lundi au vendredi) : Départs **Nice-Ville ➔ Antibes**
   - Fuseau horaire configuré sur `Europe/Paris`.
 - ⚡ **À la demande & interactif** :
-  - `/trains` : Détection automatique du sens selon l'heure de la journée (matin vs après-midi)
-  - `/antibes` : Départs immédiats Antibes ➔ Nice-Ville
-  - `/nice` : Départs immédiats Nice-Ville ➔ Antibes
-  - Boutons interactifs intégrés : `🔄 Actualiser` et `↔️ Inverser sens`
+  - `/trains` : Détection automatique du sens (matin vs après-midi) avec synthèse combinée trains TER + bus Envibus Ligne A
+  - `/bus` : Prochains passages en direct de la Ligne A (Collège Bertone ➔ Pôle d'Échanges le matin, Pôle d'Échanges ➔ Collège Bertone le soir)
+  - `/antibes` : Départs immédiats Antibes ➔ Nice-Ville (+ correspondances bus)
+  - `/nice` : Départs immédiats Nice-Ville ➔ Antibes (+ correspondances bus)
+  - Boutons interactifs intégrés : `🔄 Actualiser`, `↔️ Inverser sens`, et liens directs TER Sud / Envibus Ligne A
 - 🔒 **Contrôle d'accès strict** :
   - Seuls les utilisateurs Telegram dont l'ID numérique figure dans `ALLOWED_USER_IDS` peuvent interagir avec le bot.
   - Tout utilisateur non autorisé reçoit un message refusant l'accès et affichant son identifiant Telegram afin qu'il puisse le transmettre à l'administrateur.

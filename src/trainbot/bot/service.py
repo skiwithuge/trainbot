@@ -6,6 +6,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler
 
 from trainbot.bot.handlers import (
     antibes_command,
+    bus_command,
     callback_handler,
     help_command,
     nice_command,
@@ -13,6 +14,7 @@ from trainbot.bot.handlers import (
     trains_command,
 )
 from trainbot.config import Config
+from trainbot.envibus.client import EnvibusClient
 from trainbot.sncf.client import SncfClient
 
 logger = logging.getLogger(__name__)
@@ -30,16 +32,24 @@ def build_application(config: Config) -> Application:
         mock_mode=not bool(config.sncf_api_key),
     )
 
+    # Initialize Envibus client (no API key required)
+    envibus_client = EnvibusClient(
+        timezone=config.timezone,
+        mock_mode=False,
+    )
+
     app = Application.builder().token(config.telegram_bot_token).build()
 
     # Store shared objects in bot_data
     app.bot_data["config"] = config
     app.bot_data["sncf_client"] = sncf_client
+    app.bot_data["envibus_client"] = envibus_client
 
     # Register command handlers
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("trains", trains_command))
+    app.add_handler(CommandHandler("bus", bus_command))
     app.add_handler(CommandHandler("antibes", antibes_command))
     app.add_handler(CommandHandler("nice", nice_command))
 
