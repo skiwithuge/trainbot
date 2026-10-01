@@ -131,7 +131,7 @@ def test_format_commute_message_with_bus_section():
     assert "Envibus Ligne A (Collège Bertone ➔ Pôle d'Échanges d'Antibes)" in msg
     assert "Dans 8 min" in msg
     assert "07:08" in msg
-    assert "https://www.envibus.fr/le-reseau/itineraires" in msg
+    assert "<a href=" not in msg
 
 
 def test_format_bus_message_standalone():
@@ -204,6 +204,6 @@ def test_make_bus_keyboard():
 
     row1 = kb.inline_keyboard[1]
     assert len(row1) == 1
-    assert row1[0].text == "🚌 Itinéraire Ligne A"
+    assert row1[0].text == "🚌 Envibus Ligne A"
     assert "itineraires?product=place-journey-map" in row1[0].url
     assert "ENVIBUSSCHOLAR" in row1[0].url

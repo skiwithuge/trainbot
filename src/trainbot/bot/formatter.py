@@ -38,11 +38,7 @@ def format_departure_card(dep: TrainDeparture) -> str:
 
 def format_bus_section(status: BusCommuteStatus) -> str:
     """Format the Envibus Line A departure block for combined commute messages."""
-    url = status.itinerary_url
-    if url:
-        header = f"🚌 <b><a href=\"{url}\">Envibus Ligne A ({status.stop_name} ➔ {status.direction_name})</a> :</b>"
-    else:
-        header = f"🚌 <b>Envibus Ligne A ({status.stop_name} ➔ {status.direction_name}) :</b>"
+    header = f"🚌 <b>Envibus Ligne A ({status.stop_name} ➔ {status.direction_name}) :</b>"
 
     lines = [header]
     for dep in status.departures:
@@ -56,14 +52,8 @@ def format_bus_section(status: BusCommuteStatus) -> str:
 def format_bus_message(status: BusCommuteStatus) -> str:
     """Format standalone bus message for /bus command."""
     q_time = status.query_time.strftime("%H:%M")
-    url = status.itinerary_url
-    if url:
-        title = f"<a href=\"{url}\">Envibus Ligne A : {status.stop_name} ➔ {status.direction_name}</a>"
-    else:
-        title = f"Envibus Ligne A : {status.stop_name} ➔ {status.direction_name}"
-
     header = (
-        f"🚌 <b>{title}</b>\n"
+        f"🚌 <b>Envibus Ligne A : {status.stop_name} ➔ {status.direction_name}</b>\n"
         f"<i>Mis à jour à {q_time}</i>\n"
     )
 
@@ -143,7 +133,7 @@ def make_bus_keyboard(direction: CommuteDirection) -> InlineKeyboardMarkup:
             InlineKeyboardButton(reverse_label, callback_data=f"bus_switch:{reverse_dir.value}"),
         ],
         [
-            InlineKeyboardButton("🚌 Itinéraire Ligne A", url=envibus_url),
+            InlineKeyboardButton("🚌 Envibus Ligne A", url=envibus_url),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
