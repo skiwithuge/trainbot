@@ -16,8 +16,8 @@ class Config:
     sncf_api_key: str
     allowed_user_ids: frozenset[int] = field(default_factory=frozenset)
     timezone: str = "Europe/Paris"
-    morning_time: str = "07:00"
-    evening_time: str = "16:00"
+    morning_time: str = "07:15"
+    evening_time: str = "16:15"
     max_departures: int = 4
     log_level: str = "INFO"
 
@@ -38,8 +38,8 @@ class Config:
                     allowed_ids.add(int(cleaned))
 
         tz = os.getenv("TIMEZONE", "Europe/Paris").strip()
-        morning = os.getenv("MORNING_TIME", "07:00").strip()
-        evening = os.getenv("EVENING_TIME", "16:00").strip()
+        morning = os.getenv("MORNING_TIME", "07:15").strip()
+        evening = os.getenv("EVENING_TIME", "16:15").strip()
         log_level = os.getenv("LOG_LEVEL", "INFO").strip().upper()
 
         return cls(

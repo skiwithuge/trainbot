@@ -17,12 +17,14 @@ from trainbot.bot.formatter import (
     make_commute_keyboard,
 )
 from trainbot.config import Config
-from trainbot.envibus.client import EnvibusClient
+from trainbot.envibus.client import EnvibusClient, get_itinerary_url
 from trainbot.envibus.models import BusCommuteStatus
 from trainbot.sncf.client import SncfClient
 from trainbot.sncf.models import CommuteDirection, CommuteStatus
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_BUS_COUNT = 5
 
 
 def get_default_direction(timezone_str: str) -> CommuteDirection:
@@ -46,8 +48,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "Je suis votre assistant direct <b>Antibes ⟷ Nice-Ville</b> (TER & Bus Ligne A).\n"
         "Je vous préviens des prochains départs, retards et perturbations.\n\n"
         "📅 <b>Alertes automatiques :</b>\n"
-        "• 07:00 (Semaine) : Antibes ➔ Nice-Ville + Bus Bertone\n"
-        "• 16:00 (Semaine) : Nice-Ville ➔ Antibes + Bus Pôle d'Échanges\n\n"
+        "• 07:15 (Semaine) : Antibes ➔ Nice-Ville + Bus Bertone\n"
+        "• 16:15 (Semaine) : Nice-Ville ➔ Antibes + Bus Pôle d'Échanges\n\n"
         "⚡ <b>Commandes disponibles :</b>\n"
         "• /trains : Prochains trains et bus selon le moment de la journée\n"
         "• /bus : Prochains bus Envibus Ligne A en direct\n"
@@ -64,7 +66,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     try:
         train_task = sncf_client.get_next_trains(direction, count=config.max_departures)
-        bus_task = envibus_client.get_next_departures(direction, count=3) if envibus_client else None
+        bus_task = envibus_client.get_next_departures(direction, count=DEFAULT_BUS_COUNT) if envibus_client else None
 
         if bus_task:
             train_res, bus_res = await asyncio.gather(train_task, bus_task, return_exceptions=True)
@@ -97,15 +99,15 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     help_text = (
         "ℹ️ <b>Aide - Bot TER & Envibus Antibes ⟷ Nice</b>\n\n"
         "<b>Commandes :</b>\n"
-        "• /trains : Prochains trains et correspondances bus selon l'heure\n"
-        "• /bus : Prochains bus Envibus Ligne A en temps réel\n"
+        "• /trains : Prochains trains et correspondances bus Ligne A\n"
+        "• /bus : Prochains bus Envibus Ligne A en direct\n"
         "• /antibes : Prochains TER et bus au départ d'Antibes vers Nice-Ville\n"
         "• /nice : Prochains TER et bus au départ de Nice-Ville vers Antibes\n"
         "• /help : Affiche ce message d'aide\n\n"
         "<b>Boutons interactifs :</b>\n"
         "• 🔄 <b>Actualiser</b> : Rafraîchit les horaires et retards en temps réel\n"
         "• ↔️ <b>Inverser</b> : Bascule instantanément sur l'autre sens de trajet\n"
-        "• 🎫 <b>TER Sud</b> / 🚌 <b>Envibus Ligne A</b> : Liens directs vers les horaires officiels"
+        "• 🎫 <b>TER Sud</b> / 🚌 <b>Envibus Ligne A</b> : Liens directs avec arrêts présélectionnés"
     )
     await update.effective_message.reply_text(help_text, parse_mode=ParseMode.HTML)
 
@@ -155,7 +157,7 @@ async def _send_departures(
 
     try:
         train_task = client.get_next_trains(direction, count=config.max_departures)
-        bus_task = envibus_client.get_next_departures(direction, count=3) if envibus_client else None
+        bus_task = envibus_client.get_next_departures(direction, count=DEFAULT_BUS_COUNT) if envibus_client else None
 
         if bus_task:
             train_res, bus_res = await asyncio.gather(train_task, bus_task, return_exceptions=True)
@@ -200,7 +202,7 @@ async def _send_bus_departures(
     )
 
     try:
-        bus_status = await envibus_client.get_next_departures(direction, count=3)
+        bus_status = await envibus_client.get_next_departures(direction, count=DEFAULT_BUS_COUNT)
         if not bus_status:
             # Generate fallback empty status with correct metadata
             now = datetime.now(envibus_client.tz)
@@ -212,6 +214,7 @@ async def _send_bus_departures(
                 departures=[],
                 query_time=now,
                 is_live=False,
+                itinerary_url=get_itinerary_url(direction),
             )
 
         text = format_bus_message(bus_status)
@@ -258,7 +261,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                 await query.answer("Service Envibus indisponible.", show_alert=True)
                 return
 
-            bus_status = await envibus_client.get_next_departures(direction, count=3)
+            bus_status = await envibus_client.get_next_departures(direction, count=DEFAULT_BUS_COUNT)
             if not bus_status:
                 now = datetime.now(envibus_client.tz)
                 stop_name = "Collège Bertone" if direction == CommuteDirection.ANTIBES_TO_NICE else "Pôle d'Échanges d'Antibes"
@@ -270,6 +273,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                     departures=[],
                     query_time=now,
                     is_live=False,
+                    itinerary_url=get_itinerary_url(direction),
                 )
 
             text = format_bus_message(bus_status)
@@ -281,7 +285,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
         # Handle combined commute refresh / switch
         train_task = sncf_client.get_next_trains(direction, count=config.max_departures)
-        bus_task = envibus_client.get_next_departures(direction, count=3) if envibus_client else None
+        bus_task = envibus_client.get_next_departures(direction, count=DEFAULT_BUS_COUNT) if envibus_client else None
 
         if bus_task:
             train_res, bus_res = await asyncio.gather(train_task, bus_task, return_exceptions=True)

@@ -3,7 +3,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import pytest
 
-from trainbot.envibus.client import EnvibusClient
+from trainbot.envibus.client import EnvibusClient, get_itinerary_url
 from trainbot.envibus.models import BusCommuteStatus, BusDeparture
 from trainbot.sncf.models import CommuteDirection
 
@@ -19,7 +19,8 @@ def test_bus_departure_properties():
         is_realtime=True,
     )
     assert dep1.formatted_time == "08:15"
-    assert dep1.status_summary == "Dans 9 min (08:15)"
+    assert "⚡" in dep1.status_summary
+    assert "Dans 9 min (08:15)" in dep1.status_summary
 
     dep_now = BusDeparture(
         minutes_away=0,
@@ -27,7 +28,16 @@ def test_bus_departure_properties():
         destination="Antibes les Pins",
         is_realtime=True,
     )
-    assert dep_now.status_summary == "À l'approche (08:15)"
+    assert "À l'approche" in dep_now.status_summary
+
+    dep_sched = BusDeparture(
+        minutes_away=25,
+        estimated_time=est_time,
+        destination="Antibes les Pins",
+        is_realtime=False,
+    )
+    assert "📅" in dep_sched.status_summary
+    assert "(prévu)" in dep_sched.status_summary
 
 
 def test_bus_commute_status():
@@ -53,23 +63,37 @@ def test_bus_commute_status():
     assert status_with_dep.has_departures
 
 
+def test_get_itinerary_url():
+    morning_url = get_itinerary_url(CommuteDirection.ANTIBES_TO_NICE)
+    assert "itineraires?product=place-journey-map" in morning_url
+    assert "ENVIBUSSCHOLAR" in morning_url
+    assert "COLLEGE+BERTONE" in morning_url or "COLLEGE%20BERTONE" in morning_url
+    assert "POLE+D%27ECHANGES" in morning_url or "POLE%20D%27ECHANGES" in morning_url
+
+    evening_url = get_itinerary_url(CommuteDirection.NICE_TO_ANTIBES)
+    assert "itineraires?product=place-journey-map" in evening_url
+    assert "POLE+D%27ECHANGES" in evening_url or "POLE%20D%27ECHANGES" in evening_url
+    assert "ENVIBUSSCHOLAR" in evening_url
+
+
 @pytest.mark.asyncio
 async def test_envibus_client_mock_mode():
     client = EnvibusClient(mock_mode=True)
 
-    morning = await client.get_next_departures(CommuteDirection.ANTIBES_TO_NICE, count=2)
+    morning = await client.get_next_departures(CommuteDirection.ANTIBES_TO_NICE, count=5)
     assert morning is not None
     assert morning.stop_name == "Collège Bertone"
     assert morning.direction_name == "Pôle d'Échanges d'Antibes"
-    assert len(morning.departures) == 2
+    assert len(morning.departures) == 5
     assert morning.departures[0].minutes_away == 4
-    assert morning.departures[1].minutes_away == 16
+    assert morning.departures[1].minutes_away == 14
+    assert "itineraires?product=place-journey-map" in morning.itinerary_url
 
-    evening = await client.get_next_departures(CommuteDirection.NICE_TO_ANTIBES, count=3)
+    evening = await client.get_next_departures(CommuteDirection.NICE_TO_ANTIBES, count=4)
     assert evening is not None
     assert evening.stop_name == "Pôle d'Échanges d'Antibes"
     assert evening.direction_name == "Collège Bertone"
-    assert len(evening.departures) == 3
+    assert len(evening.departures) == 4
 
 
 def test_envibus_parser_realtime_html():
@@ -90,20 +114,25 @@ def test_envibus_parser_realtime_html():
                 <span class="is-Schedule-Line-Directions-Item-Time-C2 is-realtime" >
                     29<abbr title="minutes" aria-label="minutes" lang="fr" class="is-Unit">min</abbr>
                 </span>
+                <span class="is-Schedule-Line-Directions-Item-Time-C2 is-realtime" >
+                    41<abbr title="minutes" aria-label="minutes" lang="fr" class="is-Unit">min</abbr>
+                </span>
             </span>
         </span>
     </p>
     """
 
-    departures = client._parse_realtime_departures(sample_html, count=2)
-    assert len(departures) == 2
+    departures = client._parse_departures(sample_html, count=4)
+    assert len(departures) == 4
     assert departures[0].minutes_away == 7
     assert departures[0].destination == "ANTIBES LES PINS"
     assert departures[1].minutes_away == 18
+    assert departures[2].minutes_away == 29
+    assert departures[3].minutes_away == 41
 
 
 def test_envibus_parser_empty_html():
     client = EnvibusClient()
     empty_html = "<div class='is-Alert'>Il n'y a pas de prochain départ</div>"
-    departures = client._parse_realtime_departures(empty_html, count=3)
+    departures = client._parse_departures(empty_html, count=3)
     assert len(departures) == 0

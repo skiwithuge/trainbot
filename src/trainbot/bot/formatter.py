@@ -4,10 +4,9 @@ from __future__ import annotations
 import html
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
+from trainbot.envibus.client import get_itinerary_url
 from trainbot.envibus.models import BusCommuteStatus, BusDeparture
 from trainbot.sncf.models import CommuteDirection, CommuteStatus, TrainDeparture
-
-ENVIBUS_SCHEDULE_URL = "https://www.envibus.fr"
 
 
 def format_departure_card(dep: TrainDeparture) -> str:
@@ -39,28 +38,46 @@ def format_departure_card(dep: TrainDeparture) -> str:
 
 def format_bus_section(status: BusCommuteStatus) -> str:
     """Format the Envibus Line A departure block for combined commute messages."""
-    lines = [f"🚌 <b>Envibus Ligne A ({status.stop_name} ➔ {status.direction_name}) :</b>"]
+    url = status.itinerary_url
+    if url:
+        header = f"🚌 <b><a href=\"{url}\">Envibus Ligne A ({status.stop_name} ➔ {status.direction_name})</a> :</b>"
+    else:
+        header = f"🚌 <b>Envibus Ligne A ({status.stop_name} ➔ {status.direction_name}) :</b>"
+
+    lines = [header]
     for dep in status.departures:
+        badge = "⚡" if dep.is_realtime else "📅"
         mins_text = f"Dans {dep.minutes_away} min" if dep.minutes_away > 0 else "À l'approche"
-        lines.append(f"• ⚡ <b>{mins_text}</b> ({dep.formatted_time})")
+        suffix = "" if dep.is_realtime else " <i>(prévu)</i>"
+        lines.append(f"• {badge} <b>{mins_text}</b> ({dep.formatted_time}){suffix}")
     return "\n".join(lines)
 
 
 def format_bus_message(status: BusCommuteStatus) -> str:
     """Format standalone bus message for /bus command."""
     q_time = status.query_time.strftime("%H:%M")
+    url = status.itinerary_url
+    if url:
+        title = f"<a href=\"{url}\">Envibus Ligne A : {status.stop_name} ➔ {status.direction_name}</a>"
+    else:
+        title = f"Envibus Ligne A : {status.stop_name} ➔ {status.direction_name}"
+
     header = (
-        f"🚌 <b>Envibus Ligne A : {status.stop_name} ➔ {status.direction_name}</b>\n"
+        f"🚌 <b>{title}</b>\n"
         f"<i>Mis à jour à {q_time}</i>\n"
     )
 
     if not status.has_departures:
-        body = "\nℹ️ <i>Aucun bus en circulation en temps réel actuellement.</i>\n"
+        body = "\nℹ️ <i>Aucun bus prévu ou en circulation actuellement.</i>\n"
     else:
         dep_lines = []
         for dep in status.departures:
+            badge = "⚡" if dep.is_realtime else "📅"
             mins_text = f"Dans {dep.minutes_away} min" if dep.minutes_away > 0 else "À l'approche"
-            dep_lines.append(f"• ⚡ <b>{mins_text}</b> ({dep.formatted_time}) ➔ {html.escape(dep.destination)}")
+            suffix = "" if dep.is_realtime else " <i>(prévu)</i>"
+            dep_lines.append(
+                f"• {badge} <b>{mins_text}</b> ({dep.formatted_time}){suffix} ➔ {html.escape(dep.destination)}"
+            )
         body = "\n" + "\n".join(dep_lines) + "\n"
 
     return f"{header}{body}"
@@ -99,6 +116,7 @@ def make_commute_keyboard(direction: CommuteDirection) -> InlineKeyboardMarkup:
     """Generate refresh, direction-switch, and external service link buttons."""
     reverse_dir = direction.reverse
     reverse_label = f"↔️ Vers {reverse_dir.destination_name}"
+    envibus_url = get_itinerary_url(direction)
 
     keyboard = [
         [
@@ -107,16 +125,17 @@ def make_commute_keyboard(direction: CommuteDirection) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton("🎫 TER Sud", url=direction.ter_url),
-            InlineKeyboardButton("🚌 Envibus Ligne A", url=ENVIBUS_SCHEDULE_URL),
+            InlineKeyboardButton("🚌 Envibus Ligne A", url=envibus_url),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 def make_bus_keyboard(direction: CommuteDirection) -> InlineKeyboardMarkup:
-    """Generate inline keyboard for standalone /bus message."""
+    """Generate inline keyboard for standalone /bus message with preselected journey."""
     reverse_dir = direction.reverse
     reverse_label = f"↔️ Sens inverse"
+    envibus_url = get_itinerary_url(direction)
 
     keyboard = [
         [
@@ -124,7 +143,7 @@ def make_bus_keyboard(direction: CommuteDirection) -> InlineKeyboardMarkup:
             InlineKeyboardButton(reverse_label, callback_data=f"bus_switch:{reverse_dir.value}"),
         ],
         [
-            InlineKeyboardButton("🚌 Fiche Horaires Ligne A", url=ENVIBUS_SCHEDULE_URL),
+            InlineKeyboardButton("🚌 Itinéraire Ligne A", url=envibus_url),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)

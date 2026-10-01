@@ -10,8 +10,8 @@ Bot Telegram personnel fournissant en temps réel les horaires de trains région
 - ⏱️ **Temps réel et retards** : Détection des retards calculés à la minute près (`+X min`) et des trains supprimés (`🔴 Supprimé`).
 - 📢 **Infos trafic & perturbations** : Synthèse des messages opérationnels et incidents de circulation SNCF.
 - ⏰ **Alertes automatiques** :
-  - **07:00** (du lundi au vendredi) : Départs **Antibes ➔ Nice-Ville**
-  - **16:00** (du lundi au vendredi) : Départs **Nice-Ville ➔ Antibes**
+  - **07:15** (du lundi au vendredi) : Départs **Antibes ➔ Nice-Ville**
+  - **16:15** (du lundi au vendredi) : Départs **Nice-Ville ➔ Antibes**
   - Fuseau horaire configuré sur `Europe/Paris`.
 - ⚡ **À la demande & interactif** :
   - `/trains` : Détection automatique du sens (matin vs après-midi) avec synthèse combinée trains TER + bus Envibus Ligne A

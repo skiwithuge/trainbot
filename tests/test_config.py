@@ -32,3 +32,13 @@ def test_empty_whitelist_denies_all(monkeypatch):
     cfg = Config.from_env()
 
     assert cfg.is_user_allowed(111) is False
+
+
+def test_config_default_reminder_times(monkeypatch):
+    monkeypatch.delenv("MORNING_TIME", raising=False)
+    monkeypatch.delenv("EVENING_TIME", raising=False)
+    cfg = Config.from_env()
+
+    assert cfg.morning_time == "07:15"
+    assert cfg.evening_time == "16:15"
+

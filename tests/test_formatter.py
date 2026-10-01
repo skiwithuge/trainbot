@@ -124,12 +124,14 @@ def test_format_commute_message_with_bus_section():
         direction_name="Pôle d'Échanges d'Antibes",
         departures=[bus_dep],
         query_time=q_time,
+        itinerary_url="https://www.envibus.fr/le-reseau/itineraires?product=place-journey-map",
     )
 
     msg = format_commute_message(train_status, bus_status)
     assert "Envibus Ligne A (Collège Bertone ➔ Pôle d'Échanges d'Antibes)" in msg
     assert "Dans 8 min" in msg
     assert "07:08" in msg
+    assert "https://www.envibus.fr/le-reseau/itineraires" in msg
 
 
 def test_format_bus_message_standalone():
@@ -148,6 +150,7 @@ def test_format_bus_message_standalone():
         direction_name="Collège Bertone",
         departures=[bus_dep],
         query_time=q_time,
+        itinerary_url="https://www.envibus.fr/le-reseau/itineraires?product=place-journey-map",
     )
 
     msg = format_bus_message(bus_status)
@@ -165,7 +168,7 @@ def test_format_bus_message_standalone():
         query_time=q_time,
     )
     empty_msg = format_bus_message(empty_status)
-    assert "Aucun bus en circulation en temps réel actuellement." in empty_msg
+    assert "Aucun bus prévu ou en circulation actuellement." in empty_msg
 
 
 def test_make_commute_keyboard():
@@ -184,7 +187,8 @@ def test_make_commute_keyboard():
     assert row1[0].text == "🎫 TER Sud"
     assert row1[0].url == "https://www.ter.sncf.com/sud-provence-alpes-cote-d-azur/se-deplacer/prochains-departs/antibes-87757674"
     assert row1[1].text == "🚌 Envibus Ligne A"
-    assert row1[1].url == "https://www.envibus.fr"
+    assert "itineraires?product=place-journey-map" in row1[1].url
+    assert "ENVIBUSSCHOLAR" in row1[1].url
 
 
 def test_make_bus_keyboard():
@@ -200,5 +204,6 @@ def test_make_bus_keyboard():
 
     row1 = kb.inline_keyboard[1]
     assert len(row1) == 1
-    assert row1[0].text == "🚌 Fiche Horaires Ligne A"
-    assert row1[0].url == "https://www.envibus.fr"
+    assert row1[0].text == "🚌 Itinéraire Ligne A"
+    assert "itineraires?product=place-journey-map" in row1[0].url
+    assert "ENVIBUSSCHOLAR" in row1[0].url

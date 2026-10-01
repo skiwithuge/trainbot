@@ -38,7 +38,7 @@ async def broadcast_commute_status(
     logger.info("Starting broadcast for direction: %s", direction.value)
     try:
         train_task = sncf_client.get_next_trains(direction, count=config.max_departures)
-        bus_task = envibus_client.get_next_departures(direction, count=3) if envibus_client else None
+        bus_task = envibus_client.get_next_departures(direction, count=5) if envibus_client else None
 
         if bus_task:
             train_res, bus_res = await asyncio.gather(train_task, bus_task, return_exceptions=True)
@@ -80,7 +80,7 @@ async def broadcast_commute_status(
 
 
 async def morning_broadcast_job(context: ContextTypes.DEFAULT_TYPE) -> None:
-    """07:00 weekday job: Antibes -> Nice-Ville."""
+    """07:15 weekday job: Antibes -> Nice-Ville."""
     await broadcast_commute_status(
         context,
         direction=CommuteDirection.ANTIBES_TO_NICE,
@@ -89,7 +89,7 @@ async def morning_broadcast_job(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def evening_broadcast_job(context: ContextTypes.DEFAULT_TYPE) -> None:
-    """16:00 weekday job: Nice-Ville -> Antibes."""
+    """16:15 weekday job: Nice-Ville -> Antibes."""
     await broadcast_commute_status(
         context,
         direction=CommuteDirection.NICE_TO_ANTIBES,

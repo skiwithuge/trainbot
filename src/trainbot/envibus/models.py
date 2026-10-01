@@ -22,9 +22,11 @@ class BusDeparture:
     @property
     def status_summary(self) -> str:
         """User-friendly time summary, e.g. 'Dans 9 min (20:45)'."""
+        badge = "⚡" if self.is_realtime else "📅"
+        suffix = "" if self.is_realtime else " (prévu)"
         if self.minutes_away <= 0:
-            return f"À l'approche ({self.formatted_time})"
-        return f"Dans {self.minutes_away} min ({self.formatted_time})"
+            return f"{badge} À l'approche ({self.formatted_time}){suffix}"
+        return f"{badge} Dans {self.minutes_away} min ({self.formatted_time}){suffix}"
 
 
 @dataclass(frozen=True)
@@ -37,6 +39,7 @@ class BusCommuteStatus:
     departures: list[BusDeparture] = field(default_factory=list)
     query_time: datetime = field(default_factory=datetime.now)
     is_live: bool = True
+    itinerary_url: str = ""
 
     @property
     def has_departures(self) -> bool:

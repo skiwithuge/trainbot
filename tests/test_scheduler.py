@@ -34,8 +34,8 @@ def test_setup_scheduler_registers_jobs():
         sncf_api_key="test",
         allowed_user_ids=frozenset({1001}),
         timezone="Europe/Paris",
-        morning_time="07:00",
-        evening_time="16:00",
+        morning_time="07:15",
+        evening_time="16:15",
     )
 
     setup_scheduler(app, config)
