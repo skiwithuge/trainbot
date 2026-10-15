@@ -196,3 +196,30 @@ def test_station_ids_and_stop_date_times_precedence():
     assert dep.realtime_departure.strftime("%H:%M") == "07:20"
     assert dep.delay_minutes == 5
     assert dep.platform == "2"
+
+
+@pytest.mark.asyncio
+async def test_get_next_trains_excludes_long_distance_trains(monkeypatch):
+    from unittest.mock import AsyncMock, patch
+
+    client = SncfClient(api_key="dummy_key", timezone="Europe/Paris")
+    captured_params = None
+
+    class DummyResponse:
+        status_code = 200
+        def raise_for_status(self):
+            pass
+        def json(self):
+            return {"journeys": [], "disruptions": []}
+
+    async def mock_get(self, url, params=None, auth=None, **kwargs):
+        nonlocal captured_params
+        captured_params = params
+        return DummyResponse()
+
+    with patch("httpx.AsyncClient.get", new=mock_get):
+        await client.get_next_trains(CommuteDirection.ANTIBES_TO_NICE)
+
+    assert captured_params is not None
+    assert captured_params.get("forbidden_uris[]") == "physical_mode:LongDistanceTrain"
+

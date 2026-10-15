@@ -48,6 +48,7 @@ class SncfClient:
             "datetime_represents": "departure",
             "data_freshness": "realtime",
             "min_nb_journeys": max(count * 2, 6),
+            "forbidden_uris[]": "physical_mode:LongDistanceTrain",
         }
 
         async with httpx.AsyncClient(timeout=15.0) as client:
